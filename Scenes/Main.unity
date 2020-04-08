@@ -7219,7 +7219,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   username: h2tps
-  password: 
+  password: oauth:d3xw8j4od5obq4ra6aecq3drb2fdcb
   channelName: h2tps
   spawnPlayer: {fileID: 8554565575571848333, guid: f5ecb3581deb0874b8fbfb5805695557,
     type: 3}

@@ -60,6 +60,7 @@ public class TwitchChat : MonoBehaviour
         Connect();
         spawnPoint = GameObject.FindGameObjectsWithTag("SpawnPoint");
         temps = tADP;
+        StartCoroutine(StartPartie());
     }
 
     void Update()
@@ -69,7 +70,6 @@ public class TwitchChat : MonoBehaviour
             Connect();
         }
         ReadChat();
-        StartCoroutine(StartPartie());
         if (TimerStart)
         {
             temps -= Time.deltaTime;
@@ -186,16 +186,16 @@ public class TwitchChat : MonoBehaviour
             yield return new WaitForSeconds(0.1f);
         }
         TimerStart = true;
-        StartCoroutine(EndGame());
-    }
-    IEnumerator EndGame()
-    {
-        while(TimerStart)
+        while (TimerStart)
         {
             yield return null;
         }
         startPartie = true;
         partieUnJoueur = joueurTwitch.Count >= 2;
+        StartCoroutine(EndGame());
+    }
+    IEnumerator EndGame()
+    {
         while (!endPartie)
         {
             yield return new WaitForSeconds(1f);
