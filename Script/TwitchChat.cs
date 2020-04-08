@@ -60,7 +60,7 @@ public class TwitchChat : MonoBehaviour
         Connect();
         spawnPoint = GameObject.FindGameObjectsWithTag("SpawnPoint");
         temps = tADP;
-        StartCoroutine(StartPartie());
+        StartCoroutine(StartPartieC());
     }
 
     void Update()
@@ -117,12 +117,8 @@ public class TwitchChat : MonoBehaviour
             }
         }
     }
-
-    private void GameCommande(string name,string message)
+    private void removePlayerLeft()
     {
-        char[] SplitMessage = message.ToLower().ToCharArray();
-        bool result = false;
-
         for (byte i = 0; i < joueurTwitch.Count; i++)
         {
             if (joueurTwitch[i].GetPlayerObject() == null)
@@ -131,6 +127,13 @@ public class TwitchChat : MonoBehaviour
                 i = 0;
             }
         }
+    }
+    private void GameCommande(string name,string message)
+    {
+        char[] SplitMessage = message.ToLower().ToCharArray();
+        bool result = false;
+
+        removePlayerLeft();
 
         if (SplitMessage.Length >= 2)
         { 
@@ -171,7 +174,7 @@ public class TwitchChat : MonoBehaviour
         Destroy(Instantiate(particuleSpawn, plSpawned.transform.position, Quaternion.identity),5);
     }
 
-    IEnumerator StartPartie()
+    IEnumerator StartPartieC()
     {
         for (byte i = 0; i < joueurTwitch.Count; i++)
         {
@@ -206,7 +209,16 @@ public class TwitchChat : MonoBehaviour
                     lastPlayerName = joueurTwitch[i].GetName();
                 }
             }
-            endPartie = partieUnJoueur ? joueurTwitch.Count == 1 : joueurTwitch.Count == 0;
+            removePlayerLeft();
+            if (partieUnJoueur)
+            {
+                endPartie = joueurTwitch.Count <= 1;
+            }
+            else
+            {
+                endPartie = joueurTwitch.Count == 0;
+            }
+            Debug.Log(endPartie + " " + partieUnJoueur + " " + joueurTwitch.Count);
         }
         if (lastPlayerName == "")
         {
