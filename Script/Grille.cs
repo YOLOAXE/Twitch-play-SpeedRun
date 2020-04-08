@@ -14,7 +14,7 @@ public class Grille : MonoBehaviour
         {
             for (int j = 0; j < maxSpawn.x; j++)
             {
-                Instantiate(spawnObject, transform.position + new Vector3(i*espace,0,j*espace), Quaternion.identity);
+                Instantiate(spawnObject, transform.position + new Vector3(i*espace,0,j*espace), Quaternion.identity).transform.parent = transform;
             }
         }
     }

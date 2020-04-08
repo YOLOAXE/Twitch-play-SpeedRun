@@ -15,9 +15,11 @@ public class Player : MonoBehaviour
     [SerializeField] private float distanceChange = 0.5f;
     [SerializeField] private TextMeshPro textName = null;
     [SerializeField] private Material[] mPL = null;
-    [SerializeField] private Vector3 currentPosition = new Vector3(0,0,0);
+    [SerializeField] private Vector3 precedentePos = new Vector3(0,0,0);
+    [SerializeField] private GameObject deadParticule = null;
     private Renderer m_Renderer = null;
     private bool isDead = false;
+    private bool onObstacle = false;
 
     void Start()
     {
@@ -26,6 +28,7 @@ public class Player : MonoBehaviour
         m_Renderer = transform.GetChild(0).GetChild(0).GetComponent<Renderer>();
         m_Renderer.material = mPL[Random.Range(0, mPL.Length)];
         textName.color = new Color32((byte)Random.Range(0, 150), (byte)Random.Range(0, 150), (byte)Random.Range(0, 150),255);
+        precedentePos = target.transform.position;
     }
 
     void Update()
@@ -37,16 +40,16 @@ public class Player : MonoBehaviour
             {
                 isDead = true;
                 StartCoroutine(Saut());
-                Destroy(gameObject.transform.parent.gameObject, 1f);
+                Destroy(transform.parent.gameObject, 1f);
             }
         }
-        if (!isDead)
+        if (!isDead && !onObstacle)
         {
             if (distanceChange > Vector3.Distance(target.transform.position, transform.position) && !agent.isStopped)
             {
                 if (instructionPL.Length > 0 && tabPos < instructionPL.Length)
                 {
-                    currentPosition = target.transform.position;
+                    precedentePos = target.transform.position;
                     if (instructionPL[tabPos] == 'h')
                     {
                         target.transform.position = new Vector3(target.transform.position.x + 2, target.transform.position.y, target.transform.position.z);
@@ -81,6 +84,31 @@ public class Player : MonoBehaviour
     {
         this.playerName = name;
         textName.text = name;
+    }
+
+    public IEnumerator Obstacle()
+    {
+        onObstacle = true;
+        animator.SetBool("Wall",true);
+        yield return new WaitForSeconds(0.3f);
+        agent.enabled = false;
+        yield return new WaitForSeconds(1f);
+        agent.enabled = true;
+        target.transform.position = precedentePos;
+        instructionPL = new char[2];
+        tabPos = 0;
+        onObstacle = false;
+    }
+
+    public IEnumerator Dead()
+    {
+        isDead = true;
+        yield return new WaitForSeconds(0.2f);
+        agent.enabled = false;
+        animator.SetBool("DeadSol",true);
+        yield return new WaitForSeconds(3.5f);
+        Destroy(Instantiate(deadParticule,target.transform.position,Quaternion.identity),5);
+        Destroy(transform.parent.gameObject);
     }
 
     IEnumerator Saut()

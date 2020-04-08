@@ -6,6 +6,7 @@ using System.ComponentModel;
 using System.Net.Sockets;
 using System.IO;
 using UnityEngine.UI;
+using UnityEngine.AI;
 using TMPro;
 
 [System.Serializable]
@@ -43,11 +44,22 @@ public class TwitchChat : MonoBehaviour
     [SerializeField] private List<TwitchPlayer> joueurTwitch = new List<TwitchPlayer>();
     [SerializeField] private GameObject[] spawnPoint = null;
     [SerializeField] private GameObject particuleSpawn = null;
+    [SerializeField] private TextMeshProUGUI textConteur = null;
+    [SerializeField] private NavMeshSurface navSurface = null; 
+    [SerializeField] private float tADP = 30f;
+    [SerializeField] private float speedMult = 1f;
+    private string lastPlayerName = "";
+    private float temps = 30f;
+    private bool TimerStart = false;
+    private bool endPartie = false;
+    private bool startPartie = false;
+    private bool partieUnJoueur = false;
 
     void Start()
     {
         Connect();
         spawnPoint = GameObject.FindGameObjectsWithTag("SpawnPoint");
+        temps = tADP;
     }
 
     void Update()
@@ -58,6 +70,21 @@ public class TwitchChat : MonoBehaviour
         }
         ReadChat();
         StartCoroutine(StartPartie());
+        if (TimerStart)
+        {
+            temps -= Time.deltaTime;
+            textConteur.text = Mathf.Round(temps).ToString();
+            TimerStart = temps > 0;
+            if(temps <= 0)
+            {
+                textConteur.text = "";
+            }
+        }
+        if(temps <= 0)
+        {
+            speedMult += Time.deltaTime * 0.005f;
+            transform.Translate(Vector3.left * Time.deltaTime * 1.5f * speedMult);
+        }
     }
 
     private void Connect()
@@ -107,7 +134,7 @@ public class TwitchChat : MonoBehaviour
 
         if (SplitMessage.Length >= 2)
         { 
-            if(SplitMessage[0] == '!' && SplitMessage[1] == 'j')
+            if(SplitMessage[0] == '!' && SplitMessage[1] == 'j' && !startPartie)
             {
                 for (byte i = 0; i < joueurTwitch.Count && !result; i++)
                 {
@@ -158,12 +185,53 @@ public class TwitchChat : MonoBehaviour
         {
             yield return new WaitForSeconds(0.1f);
         }
-        yield return new WaitForSeconds(5f);
-        while (true)
+        TimerStart = true;
+        StartCoroutine(EndGame());
+    }
+    IEnumerator EndGame()
+    {
+        while(TimerStart)
         {
             yield return null;
-            //transform.Translate(Vector3.left * Time.fixedDeltaTime * 0.0008f);
+        }
+        startPartie = true;
+        partieUnJoueur = joueurTwitch.Count >= 2;
+        while (!endPartie)
+        {
+            yield return new WaitForSeconds(1f);
+            for (byte i = 0; i < joueurTwitch.Count; i++)
+            {
+                if (joueurTwitch[i].GetPlayerObject() != null)
+                {
+                    lastPlayerName = joueurTwitch[i].GetName();
+                }
+            }
+            endPartie = partieUnJoueur ? joueurTwitch.Count == 1 : joueurTwitch.Count == 0;
+        }
+        if (lastPlayerName == "")
+        {
+            textConteur.text = "Personne n'a gagner.";
+        }
+        else
+        {
+            textConteur.text = lastPlayerName + " a gagner.";
+        }
+        yield return new WaitForSeconds(5f);
+        Application.LoadLevel(0);
+    }
+    void OnTriggerEnter(Collider other)
+    {
+        if(other.transform.tag == "Disposition")
+        {
+            other.transform.gameObject.GetComponent<TileManager>().Spawn();
+            navSurface.BuildNavMesh();
         }
     }
-
+    void OnTriggerExit(Collider other)
+    {
+        if (other.transform.tag == "Disposition")
+        {
+            Destroy(other.transform.parent.gameObject);
+        }
+    }
 }
