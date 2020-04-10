@@ -7218,9 +7218,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: fd97cc8f94fb7f64e8c576869aef81dd, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  username: h2tps
+  username: 
   password: 
-  channelName: h2tps
+  channelName: 
   spawnPlayer: {fileID: 8554565575571848333, guid: f5ecb3581deb0874b8fbfb5805695557,
     type: 3}
   joueurTwitch: []
