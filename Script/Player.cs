@@ -8,7 +8,6 @@ public class Player : MonoBehaviour
 {
     private NavMeshAgent agent = null;//Permet de controller L'IA 
     private Animator animator = null;//Permet de jouer des animation via des parametre
-    [SerializeField] private string playerName = "";//le non du joueur une variable un peut inutile car c'est deja renseigner dans la base de donner mais bon.
     [SerializeField] private GameObject target = null;//L'object que suis en permanance L'IA
     [SerializeField] private char[] instructionPL = null;// les instruction char par char que va lire L'IA
     [SerializeField] private int tabPos = 0;//La position dans le tableaux des instruction pour savoir ou elle ce situe dans les instructions.
@@ -20,6 +19,8 @@ public class Player : MonoBehaviour
     private Renderer m_Renderer = null;// le rendu du personnage pour lui appliquer le Tableaux de materiaux PL
     private bool isDead = false;//etat de mort
     private bool onObstacle = false;//etat Obstacle si il ce boufe un mur il ne pourat momentanement rien faire
+    [SerializeField] private TPS playerScore = null;
+    [SerializeField] private TwitchChat twitchChat = null;
 
     void Start()
     {
@@ -29,6 +30,7 @@ public class Player : MonoBehaviour
         m_Renderer.material = mPL[Random.Range(0, mPL.Length)];//on attribut un materiaux au hasard a perso
         textName.color = new Color32((byte)Random.Range(0, 150), (byte)Random.Range(0, 150), (byte)Random.Range(0, 150),255);// on attrubut une couleur au hasard au texte du nom du perso
         precedentePos = target.transform.position;//on assigne la valeur de la position precedent pour eviter les bugs si le joueur percute un obstacle au premier deplacement
+        
     }
 
     void Update()
@@ -40,6 +42,7 @@ public class Player : MonoBehaviour
             {
                 isDead = true;//meurt
                 StartCoroutine(Saut());// on appele  la coroutine saut
+                twitchChat.MiseAJourScore(playerScore);
                 Destroy(transform.parent.gameObject, 1f);//on detruit le joueur au bout de une seconde  
             }
         }
@@ -74,6 +77,11 @@ public class Player : MonoBehaviour
         animator.SetFloat("Speed", agent.desiredVelocity.magnitude);//on asigne la vitesse de l'agent a celle de l'animator 
     }
 
+    public void SetTwitchChat(TwitchChat tc)
+    {
+        this.twitchChat = tc;
+        
+    }
     public void SetInstruction(char[] instruction)//on mais a jour le tableaux des instruction et tabPos pour recommencer au debut des instructions.
     {
         instructionPL = instruction;
@@ -82,8 +90,9 @@ public class Player : MonoBehaviour
 
     public void SetPlayerName(string name)//on mais a jour le non du joueur et l'affiche sur le texte
     {
-        this.playerName = name;
         textName.text = name;
+        playerScore = new TPS(name, 0);
+        StartCoroutine(AddScore());
     }
 
     public IEnumerator Obstacle()//si il percute un obstacle cette fonction est appeler sur un script qui est sur Target
@@ -107,6 +116,7 @@ public class Player : MonoBehaviour
         agent.enabled = false;
         animator.SetBool("DeadSol",true);
         yield return new WaitForSeconds(3.5f);
+        twitchChat.MiseAJourScore(playerScore);
         Destroy(Instantiate(deadParticule,target.transform.position,Quaternion.identity),5);
         Destroy(transform.parent.gameObject);
     }
@@ -131,4 +141,15 @@ public class Player : MonoBehaviour
             yield return null;
         }
     }
+
+    IEnumerator AddScore()
+    {
+        while (true)
+        {
+            playerScore.SetScore(playerScore.GetScore() + 5);
+            yield return new WaitForSeconds(1f);
+        }
+    }
 }
+
+
